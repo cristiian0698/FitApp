@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Mi Dieta</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Dieta">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#33402A">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2A2A22;
+  --paper:#F4EFE2;
+  --paper-2:#ECE4D1;
+  --card:#FFFDF7;
+  --olive:#59703F;
+  --olive-dark:#33402A;
+  --clay:#B0523A;
+  --mustard:#C99A3E;
+  --sky:#5C7B8A;
+  --line:#DCD2B8;
+  --muted:#7A7563;
+  --shadow: 0 1px 0 rgba(42,42,34,0.06);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(78px + env(safe-area-inset-bottom));
+  min-height:100vh;
+}
+h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;}
+.wrap{max-width:520px;margin:0 auto;padding:0 18px;}
+
+/* ---- Top bar ---- */
+.topbar{
+  position:sticky; top:0; z-index:20;
+  background:var(--olive-dark);
+  color:#F4EFE2;
+  padding-top:calc(14px + env(safe-area-inset-top));
+  padding-bottom:16px;
+  border-bottom:1px solid rgba(0,0,0,0.15);
+}
+.topbar .wrap{display:flex; align-items:baseline; justify-content:space-between;}
+.brand{font-family:'Fraunces',serif; font-weight:600; font-size:1.35rem; letter-spacing:-0.01em;}
+.brand em{font-style:normal; color:var(--mustard);}
+.date-pill{font-size:0.82rem; color:#D8D3BE; font-weight:500;}
+
+/* ---- Tabs content area ---- */
+.view{display:none; padding-top:18px; animation:fade .25s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+/* ---- Day switcher (Hoy) ---- */
+.day-switch{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:6px;
+}
+.day-switch button{
+  background:none; border:none; font-size:1.3rem; color:var(--olive-dark);
+  width:40px; height:40px; border-radius:50%;
+}
+.day-switch button:active{background:var(--paper-2);}
+.day-title{text-align:center;}
+.day-title .dow{display:block; font-size:1.5rem; font-weight:600; letter-spacing:-0.01em;}
+.day-title .full{display:block; font-size:0.8rem; color:var(--muted); margin-top:1px;}
+
+.free-banner{
+  margin:18px 0 8px; padding:16px; background:var(--paper-2);
+  border-radius:14px; text-align:center; color:var(--olive-dark);
+}
+.free-banner .serif{font-size:1.1rem; font-weight:600; margin-bottom:2px;}
+.free-banner p{margin:4px 0 0; font-size:0.85rem; color:var(--muted);}
+
+/* ---- Timeline of meals ---- */
+.timeline{position:relative; margin-top:14px;}
+.meal{
+  position:relative;
+  display:flex; gap:14px;
+  padding-bottom:22px;
+}
+.meal .rail{
+  display:flex; flex-direction:column; align-items:center; width:14px; flex-shrink:0;
+}
+.meal .dot{width:12px; height:12px; border-radius:50%; background:var(--olive); margin-top:6px; flex-shrink:0; transition:background .15s;}
+.meal .stem{flex:1; width:2px; background:var(--line); margin-top:4px;}
+.meal:last-child .stem{display:none;}
+.meal.done .dot{background:var(--mustard);}
+.meal-card{
+  flex:1; background:var(--card); border-radius:16px; padding:14px 16px;
+  box-shadow:var(--shadow); border:1px solid var(--line);
+}
+.meal-card.done{opacity:0.6;}
+.meal-head{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.meal-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:600;}
+.meal-title{font-family:'Fraunces',serif; font-size:1.08rem; font-weight:600; margin:2px 0 6px; line-height:1.25;}
+.check{
+  width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line);
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  background:var(--card); font-size:0.85rem; color:transparent;
+}
+.check.checked{background:var(--mustard); border-color:var(--mustard); color:#fff;}
+.meal-items{list-style:none; margin:0; padding:0; font-size:0.88rem; color:var(--ink); line-height:1.55;}
+.meal-items li{padding-left:14px; position:relative;}
+.meal-items li::before{content:'—'; position:absolute; left:0; color:var(--muted);}
+.meal-note{font-size:0.8rem; color:var(--muted); margin-top:6px; font-style:italic;}
+
+/* ---- Week view ---- */
+.week-picker{display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px;}
+.week-picker button{
+  flex-shrink:0; border:1px solid var(--line); background:var(--card);
+  padding:8px 14px; border-radius:999px; font-size:0.82rem; font-weight:600; color:var(--muted);
+}
+.week-picker button.active{background:var(--olive-dark); color:#fff; border-color:var(--olive-dark);}
+.week-range{font-size:0.78rem; color:var(--muted); margin:-8px 0 16px;}
+.day-block{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:12px 16px; margin-bottom:10px;
+}
+.day-block summary{
+  list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+  font-family:'Fraunces',serif; font-weight:600; font-size:1rem;
+}
+.day-block summary::-webkit-details-marker{display:none;}
+.day-block summary .arrow{color:var(--muted); font-size:0.85rem; transition:transform .2s;}
+.day-block[open] summary .arrow{transform:rotate(90deg);}
+.day-block .body{padding-top:10px;}
+.mini-meal{margin-bottom:10px;}
+.mini-meal:last-child{margin-bottom:0;}
+.mini-meal .lbl{font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:600;}
+.mini-meal .txt{font-size:0.88rem; margin-top:2px;}
+.day-free .txt{color:var(--muted); font-style:italic;}
+
+/* ---- Shopping list ---- */
+.shop-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+.shop-sub{font-size:0.85rem; color:var(--muted); margin-bottom:16px;}
+.cat-group{margin-bottom:18px;}
+.cat-title{
+  font-size:0.75rem; text-transform:uppercase; letter-spacing:0.07em; font-weight:700;
+  color:var(--olive-dark); margin-bottom:8px; display:flex; align-items:center; gap:8px;
+}
+.cat-title::after{content:''; flex:1; height:1px; background:var(--line);}
+.item-row{
+  display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);
+}
+.item-row:last-child{border-bottom:none;}
+.item-row .box{
+  width:22px; height:22px; border-radius:7px; border:1.5px solid var(--line); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; background:var(--card); color:transparent; font-size:0.8rem;
+}
+.item-row .box.checked{background:var(--olive); border-color:var(--olive); color:#fff;}
+.item-row .name{flex:1; font-size:0.93rem;}
+.item-row.checked .name{text-decoration:line-through; color:var(--muted);}
+.item-row .qty{font-size:0.82rem; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap;}
+.reset-link{
+  display:block; text-align:center; margin:22px 0 4px; font-size:0.82rem; color:var(--clay); font-weight:600; background:none; border:none; width:100%; padding:10px;
+}
+
+/* ---- Training ---- */
+.train-section{margin-bottom:22px;}
+.train-section h3{font-size:1rem; margin:0 0 10px;}
+.train-block{
+  background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px;
+}
+.train-block .t-name{font-weight:600; font-size:0.93rem; margin-bottom:2px;}
+.train-block .t-reps{font-size:0.82rem; color:var(--muted); margin-bottom:6px;}
+.train-block a{font-size:0.82rem; color:var(--sky); text-decoration:none; font-weight:600;}
+.train-block a::after{content:' ↗';}
+.warmup-list, .stretch-list{list-style:none; padding:0; margin:0;}
+.warmup-list li, .stretch-list li{
+  font-size:0.9rem; padding:9px 0; border-bottom:1px solid var(--line);
+}
+.warmup-list li:last-child, .stretch-list li:last-child{border-bottom:none;}
+.pill-note{
+  background:var(--paper-2); border-radius:12px; padding:12px 14px; font-size:0.85rem; color:var(--olive-dark); margin-bottom:18px;
+}
+
+/* ---- Tab bar ---- */
+.tabbar{
+  position:fixed; bottom:0; left:0; right:0; z-index:30;
+  background:rgba(244,239,226,0.92); backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tabbar-inner{max-width:520px; margin:0 auto; display:flex;}
+.tabbar button{
+  flex:1; background:none; border:none; padding:10px 4px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  color:var(--muted); font-family:'Inter',sans-serif; font-size:0.68rem; font-weight:600;
+}
+.tabbar button .ic{font-size:1.25rem; line-height:1;}
+.tabbar button.active{color:var(--olive-dark);}
+
+.hero-fruit{
+  font-size:0.8rem; color:var(--muted); background:var(--card); border:1px solid var(--line);
+  border-radius:12px; padding:10px 14px; margin-top:16px;
+}
+.hero-fruit b{color:var(--olive-dark);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">Mi <em>Dieta</em></div>
+    <div class="date-pill" id="topDate"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HOY -->
+  <section id="view-hoy" class="view active">
+    <div class="day-switch">
+      <button id="prevDay" aria-label="Día anterior">‹</button>
+      <div class="day-title">
+        <span class="dow" id="dowLabel">Lunes</span>
+        <span class="full" id="fullDateLabel">1 de septiembre</span>
+      </div>
+      <button id="nextDay" aria-label="Día siguiente">›</button>
+    </div>
+
+    <div id="hoyContent"></div>
+  </section>
+
+  <!-- SEMANA -->
+  <section id="view-semana" class="view">
+    <div class="week-picker" id="weekPicker"></div>
+    <div class="week-range" id="weekRange"></div>
+    <div id="weekList"></div>
+  </section>
+
+  <!-- COMPRA -->
+  <section id="view-compra" class="view">
+    <div class="shop-head">
+      <h2 class="serif" style="margin:0;font-size:1.3rem;">Lista de la compra</h2>
+    </div>
+    <div class="shop-sub" id="shopSub">Ingredientes de esta semana, agrupados por tipo.</div>
+    <div class="week-picker" id="shopWeekPicker"></div>
+    <div id="shopList"></div>
+    <button class="reset-link" id="resetShop">Desmarcar todo</button>
+  </section>
+
+  <!-- ENTRENO -->
+  <section id="view-entreno" class="view">
+    <h2 class="serif" style="margin:0 0 4px;font-size:1.3rem;">Entrenamiento funcional</h2>
+    <div class="pill-note">4 veces por semana · circuito de 4 rondas con 60–90s de descanso entre rondas</div>
+
+    <div class="train-section">
+      <h3>Calentamiento <span style="color:var(--muted);font-weight:400;">— 5 min, 45s por ejercicio</span></h3>
+      <ul class="warmup-list">
+        <li>Jumping jack</li>
+        <li>Sentadilla</li>
+        <li>Sombra</li>
+        <li>Mountain climbing (o toque de hombro)</li>
+      </ul>
+    </div>
+
+    <div class="train-section">
+      <h3>Circuito principal <span style="color:var(--muted);font-weight:400;">— 4 rondas</span></h3>
+      <div id="mainCircuit"></div>
+    </div>
+
+    <div class="train-section">
+      <h3>Movilidad y elasticidad <span style="color:var(--muted);font-weight:400;">— 45s por lado</span></h3>
+      <div id="mobilityCircuit"></div>
+    </div>
+
+    <div class="pill-note" style="margin-top:4px;">Estiramiento y vuelta a la calma para cerrar la sesión.</div>
+  </section>
+
+</div>
+
+<div class="tabbar">
+  <div class="tabbar-inner">
+    <button class="tab-btn active" data-view="hoy"><span class="ic">🍽️</span>Hoy</button>
+    <button class="tab-btn" data-view="semana"><span class="ic">📅</span>Semana</button>
+    <button class="tab-btn" data-view="compra"><span class="ic">🛒</span>Compra</button>
+    <button class="tab-btn" data-view="entreno"><span class="ic">🏋️</span>Entreno</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   DATA MODEL — extraído del plan de dieta (septiembre)
+   ========================================================= */
+const FIXED = {
+  desayuno: { title: "Pan integral con pavo", items: ["Pan integral (50g)", "Pavo (30g)", "Aceite de oliva", "Té o infusión"] },
+  media: { title: "Yogur con fruta", items: ["Yogur", "Fruta"] },
+  merienda: { title: "Pieza de fruta", items: ["Fruta (manzana, pera, naranja, mandarina, melón o sandía)"] }
+};
+
+// items: [nombre, cantidad]
+const WEEKS = {
+  1: { range: "1 – 7 sept", days: [
+    { almuerzo:{title:"Pollo a la plancha y patata", items:[["Pechuga de pollo","150 g"],["Patata","250 g"]]},
+      cena:{title:"Tortilla, pavo y queso", items:[["Huevos","2"],["Pavo (fiambre)","40 g"],["Queso havarti light","1 loncha"]]} },
+    { almuerzo:{title:"Pescado con queso", items:[["Merluza","200 g"],["Queso semicurado","30 g"]]},
+      cena:{title:"Sándwich", items:[["Pan de molde","2 rebanadas"],["Pollo","100 g"],["Queso havarti light","1 loncha"],["Huevo","1"]]} },
+    { almuerzo:{title:"Patata y pulpo", items:[["Pulpo","150 g"],["Patata","250 g"],["Pimentón","al gusto"]]},
+      cena:{title:"Revuelto", items:[["Huevos","2"],["Jamón","20 g"],["Mozzarella","30 g"]]} },
+    { almuerzo:{title:"Pasta con pollo", items:[["Pasta","50 g"],["Pollo","100 g"],["Tomate frito","2 cucharadas"]]},
+      cena:{title:"Hamburguesa", items:[["Hamburguesa de pollo","1"],["Huevo","1"],["Queso havarti light","1 loncha"]]} },
+    { almuerzo:{title:"Caldo con fideos", items:[["Fideos","20 g"],["Pollo","50 g"],["Huevo","1"],["Jamón","15 g"],["Caldo / avecrem","1"]]},
+      cena:{title:"Tortilla de atún", items:[["Huevos","2"],["Atún en lata","1 lata"]]} },
+    { almuerzo:{title:"Ternera con patata", items:[["Ternera","150 g"],["Patata","250 g"]]},
+      cena:{title:"Piadina", items:[["Pan de piadina / fajita","1"],["Tomate frito","1"],["Mozzarella","35 g"],["Pavo (fiambre)","al gusto"]]} },
+  ]},
+  2: { range: "8 – 15 sept", days: [
+    { almuerzo:{title:"Merluza con patata", items:[["Merluza","150 g"],["Patata","250 g"],["Pepino","1"]]},
+      cena:{title:"Tortilla y atún", items:[["Huevo","1"],["Atún en lata","1 lata"]]} },
+    { almuerzo:{title:"Paella", items:[["Arroz","ración"],["Pollo y/o marisco","al gusto"]]},
+      cena:{title:"Sándwich", items:[["Pan de molde","2 rebanadas"],["Pollo","60 g"],["Queso havarti light","1 loncha"],["Huevo","1"]]} },
+    { almuerzo:{title:"Boquerones (o pulpo) con patata", items:[["Boquerones (o pulpo)","150 g"],["Patata","250 g"]]},
+      cena:{title:"Hamburguesa", items:[["Hamburguesa de pollo","1"],["Huevo","1"],["Queso havarti light","1 loncha"]]} },
+    { almuerzo:{title:"Pasta con pollo", items:[["Pasta","60 g"],["Pollo","150 g"],["Tomate frito","2 cucharadas"]]},
+      cena:{title:"Tortilla y pavo", items:[["Huevo","1"],["Pavo (fiambre)","30 g"],["Pepino","1"]]} },
+    { almuerzo:{title:"Patata, atún y huevo", items:[["Patata cocida","200 g"],["Atún en lata","1 lata"],["Huevo","1"]]},
+      cena:{title:"Fajita", items:[["Tortilla de trigo","1"],["Pollo","60 g"],["Queso light","1 loncha"],["Tomate frito","1"]]} },
+    { almuerzo:{title:"Pollo al horno con patatas", items:[["Pollo","120 g"],["Patata","200 g"]]},
+      cena:{title:"Revuelto", items:[["Huevos","2"],["Jamón","20 g"],["Mozzarella","30 g"]]} },
+  ]},
+  3: { range: "16 – 23 sept", days: [
+    { almuerzo:{title:"Pollo con patata", items:[["Pollo","150 g"],["Patata","250 g"],["Pepino","1"]]},
+      cena:{title:"Tortilla", items:[["Huevo","1"],["Pavo (fiambre)","30 g"],["Queso havarti light","1 loncha"]]} },
+    { almuerzo:{title:"Ternera con pan integral", items:[["Ternera","150 g"],["Pan integral","60 g"],["Pepino","1"]]},
+      cena:{title:"Sándwich", items:[["Pan de molde","2 rebanadas"],["Pollo","60 g"],["Queso havarti light","1 loncha"],["Huevo","1"]]} },
+    { almuerzo:{title:"Fajitas de pollo", items:[["Tortillas de trigo","2"],["Pechuga de pollo","150 g"],["Mozzarella","al gusto"],["Tomate","al gusto"]]},
+      cena:{title:"Revuelto", items:[["Huevos","2"],["Jamón","20 g"],["Mozzarella","30 g"]]} },
+    { almuerzo:{title:"Pasta con pollo", items:[["Pasta","60 g"],["Pollo","150 g"],["Tomate frito","2 cucharadas"]]},
+      cena:{title:"Hamburguesa con pepino", items:[["Hamburguesa de pollo","1"],["Pepino","1"]]} },
+    { almuerzo:{title:"Caldo de picadillo", items:[["Fideos","20 g"],["Huevo","1"],["Jamón","15 g"],["Caldo / avecrem","1"]]},
+      cena:{title:"Tortilla y atún", items:[["Huevos","2"],["Atún en lata","1 lata"]]} },
+    { almuerzo:{title:"Merluza con patatas al horno", items:[["Merluza","150 g"],["Patata","al gusto"]]},
+      cena:{title:"Fajita kebab", items:[["Tortilla de trigo","1"],["Kebab de pollo","al gusto"],["Mozzarella","al gusto"],["Salsa yogur 0%","1"]]} },
+  ]},
+  4: { range: "24 – 30 sept", days: [
+    { almuerzo:{title:"Pollo con patata", items:[["Pollo","150 g"],["Patata","250 g"],["Pepino","1"]]},
+      cena:{title:"Tortilla y atún", items:[["Huevos","2"],["Atún en lata","1 lata"]]} },
+    { almuerzo:{title:"Pasta con pollo y tomate", items:[["Pasta","60 g"],["Pollo","100 g"],["Tomate","al gusto"]]},
+      cena:{title:"Sándwich", items:[["Pan de molde","2 rebanadas"],["Pollo","60 g"],["Queso havarti light","1 loncha"],["Huevo","1"]]} },
+    { almuerzo:{title:"Merluza con patata", items:[["Merluza","150 g"],["Patata","200 g"]]},
+      cena:{title:"Tortilla y pepino", items:[["Huevos","2"],["Pepino","1"]]} },
+    { almuerzo:{title:"Caldo de picadillo", items:[["Fideos","20 g"],["Huevo","1"],["Jamón","15 g"],["Caldo / avecrem","1"]]},
+      cena:{title:"Hamburguesa con queso", items:[["Hamburguesa de pollo","1"],["Queso","1 loncha"],["Pepino","1"]]} },
+    { almuerzo:{title:"Patata, atún y huevo", items:[["Patata cocida","200 g"],["Atún en lata","1 lata"],["Huevo","1"]]},
+      cena:{title:"Fajita de pavo", items:[["Tortilla de trigo","1"],["Pavo (fiambre)","al gusto"],["Tomate","al gusto"],["Queso","al gusto"]]} },
+    { almuerzo:{title:"Ternera con pan integral", items:[["Ternera","150 g"],["Pan integral","60 g"],["Queso","al gusto"]]},
+      cena:{title:"Revuelto", items:[["Huevo","1"],["Mozzarella","al gusto"],["Jamón","15 g"]]} },
+  ]},
+};
+
+const DOW = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const MONTHS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+const TRAINING_MAIN = [
+  {name:"Press de hombros con mancuernas", reps:"15 reps", url:"https://youtube.com/shorts/SPlZA3Rvts8?si=pdjACLtrKuNzVAcJ"},
+  {name:"Remo con banda elástica", reps:"15 reps", url:"https://youtu.be/KmpDowjBY2A?si=Lf3GASDuxgsaMKO_"},
+  {name:"Sentadilla goblet con mancuerna", reps:"12 reps", url:"https://youtube.com/shorts/ohgaarm26-c?si=_BdAIOlcJZQf4EYi"},
+  {name:"Floor press con mancuernas", reps:"12 reps", url:"https://youtube.com/shorts/T2LnfXnEy1A?si=7-hDnJ-Iwp_yqGF5"},
+  {name:"Punching con gomas", reps:"30 segundos", url:"https://youtube.com/shorts/e__6JR2VTSY?si=AWwGx4N-EnivQdb7"},
+  {name:"Plancha abdominal", reps:"50 segundos", url:null},
+  {name:"Sombra", reps:"2 minutos", url:null},
+];
+const TRAINING_MOBILITY = [
+  {name:"Apertura de cadera en zancada", url:"https://youtube.com/shorts/VV4J1wJ8XeY?si=KuQp2MUUlvvZF9Ne"},
+  {name:"Isquiotibiales con banda elástica", url:"https://youtu.be/OwzEmLNgkzA?si=IT3odl4d0z1lf-6p"},
+  {name:"Mariposa progresiva", url:"https://youtube.com/shorts/KUBQEeWx5HU?si=FA0uFAHtp5a1ltm2"},
+  {name:"Estiramiento de la paloma", url:"https://youtube.com/shorts/iATYTk59pRo?si=B3GG2EumagsAQ1tr"},
+  {name:"Desconexión de hombros y pectoral con banda", url:"https://youtube.com/shorts/jRjgQOmivTY?si=AOKBKiUnCH4wluGk"},
+];
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function weekNumberForDate(d){
+  const date = d.getDate();
+  if(date <= 7) return 1;
+  if(date <= 15) return 2;
+  if(date <= 23) return 3;
+  return 4;
+}
+// Monday=0 ... Saturday=5, Sunday=null (free)
+function rowIndexForDate(d){
+  const jsDay = d.getDay(); // 0 Sun .. 6 Sat
+  if(jsDay === 0) return null;
+  return jsDay - 1;
+}
+function planForDate(d){
+  const wk = weekNumberForDate(d);
+  const row = rowIndexForDate(d);
+  if(row === null) return { week: wk, free: true };
+  return { week: wk, free: false, day: WEEKS[wk].days[row] };
+}
+function fmtFull(d){
+  return `${d.getDate()} de ${MONTHS[d.getMonth()]}`;
+}
+function isoKey(d){
+  return d.toISOString().slice(0,10);
+}
+function keyEq(d1,d2){
+  return d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth() && d1.getDate()===d2.getDate();
+}
+
+/* =========================================================
+   STATE (persisted)
+   ========================================================= */
+let store = {};
+try{ store = JSON.parse(localStorage.getItem('dietaStore') || '{}'); }catch(e){ store = {}; }
+function saveStore(){
+  try{ localStorage.setItem('dietaStore', JSON.stringify(store)); }catch(e){}
+}
+function mealKey(d, mealName){ return isoKey(d) + ':' + mealName; }
+function isMealDone(d, mealName){ return !!store[mealKey(d,mealName)]; }
+function toggleMeal(d, mealName){
+  const k = mealKey(d, mealName);
+  store[k] = !store[k];
+  saveStore();
+}
+
+let currentDate = new Date();
+currentDate.setHours(0,0,0,0);
+
+/* =========================================================
+   RENDER: HOY
+   ========================================================= */
+function renderHoy(){
+  document.getElementById('dowLabel').textContent = DOW[currentDate.getDay()];
+  document.getElementById('fullDateLabel').textContent = fmtFull(currentDate);
+
+  const plan = planForDate(currentDate);
+  const el = document.getElementById('hoyContent');
+
+  if(plan.free){
+    el.innerHTML = `
+      <div class="free-banner">
+        <div class="serif">Día libre</div>
+        <p>No hay comida ni cena programadas — mantén el desayuno, media mañana y merienda de siempre, y disfruta con moderación.</p>
+      </div>
+      ${renderTimeline(currentDate, null)}
+    `;
+    return;
+  }
+  el.innerHTML = renderTimeline(currentDate, plan.day);
+  attachHoyHandlers();
+}
+
+function renderTimeline(d, day){
+  const meals = [
+    {key:'desayuno', label:'Desayuno', title: FIXED.desayuno.title, items: FIXED.desayuno.items},
+    {key:'media', label:'Media mañana', title: FIXED.media.title, items: FIXED.media.items},
+  ];
+  if(day){
+    meals.push({key:'almuerzo', label:'Almuerzo', title: day.almuerzo.title, items: day.almuerzo.items.map(i=>i[0]+' — '+i[1])});
+  }
+  meals.push({key:'merienda', label:'Merienda', title: FIXED.merienda.title, items: FIXED.merienda.items});
+  if(day){
+    meals.push({key:'cena', label:'Cena', title: day.cena.title, items: day.cena.items.map(i=>i[0]+' — '+i[1])});
+  }
+
+  let html = '<div class="timeline">';
+  meals.forEach((m)=>{
+    const done = isMealDone(d, m.key);
+    html += `
+      <div class="meal ${done?'done':''}">
+        <div class="rail"><div class="dot"></div><div class="stem"></div></div>
+        <div class="meal-card ${done?'done':''}">
+          <div class="meal-head">
+            <div>
+              <div class="meal-label">${m.label}</div>
+              <div class="meal-title">${m.title}</div>
+            </div>
+            <button class="check ${done?'checked':''}" data-meal="${m.key}">✓</button>
+          </div>
+          <ul class="meal-items">${m.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  html += `<div class="hero-fruit">🍌 Si entrenas hoy: <b>plátano 45 min antes</b> del entrenamiento.</div>`;
+  return html;
+}
+
+function attachHoyHandlers(){
+  document.querySelectorAll('#hoyContent .check').forEach(btn=>{
+    btn.onclick = ()=>{
+      toggleMeal(currentDate, btn.dataset.meal);
+      renderHoy();
+    };
+  });
+}
+
+document.getElementById('prevDay').onclick = ()=>{
+  currentDate.setDate(currentDate.getDate()-1);
+  renderHoy();
+};
+document.getElementById('nextDay').onclick = ()=>{
+  currentDate.setDate(currentDate.getDate()+1);
+  renderHoy();
+};
+
+/* =========================================================
+   RENDER: SEMANA
+   ========================================================= */
+let selectedWeek = weekNumberForDate(new Date());
+
+function renderWeekPicker(){
+  const wp = document.getElementById('weekPicker');
+  wp.innerHTML = '';
+  [1,2,3,4].forEach(n=>{
+    const b = document.createElement('button');
+    b.textContent = 'Semana ' + n;
+    if(n === selectedWeek) b.classList.add('active');
+    b.onclick = ()=>{ selectedWeek = n; renderWeekPicker(); renderWeekList(); };
+    wp.appendChild(b);
+  });
+  document.getElementById('weekRange').textContent = WEEKS[selectedWeek].range + ' · septiembre';
+}
+
+function renderWeekList(){
+  const el = document.getElementById('weekList');
+  const days = WEEKS[selectedWeek].days;
+  const dowNames = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  let html = '';
+  days.forEach((day, i)=>{
+    html += `
+      <details class="day-block">
+        <summary>${dowNames[i]}<span class="arrow">›</span></summary>
+        <div class="body">
+          <div class="mini-meal"><div class="lbl">Desayuno</div><div class="txt">${FIXED.desayuno.title}</div></div>
+          <div class="mini-meal"><div class="lbl">Media mañana</div><div class="txt">${FIXED.media.title}</div></div>
+          <div class="mini-meal"><div class="lbl">Almuerzo</div><div class="txt">${day.almuerzo.title} — ${day.almuerzo.items.map(x=>x[0]+' '+x[1]).join(', ')}</div></div>
+          <div class="mini-meal"><div class="lbl">Merienda</div><div class="txt">${FIXED.merienda.title}</div></div>
+          <div class="mini-meal"><div class="lbl">Cena</div><div class="txt">${day.cena.title} — ${day.cena.items.map(x=>x[0]+' '+x[1]).join(', ')}</div></div>
+        </div>
+      </details>`;
+  });
+  html += `
+    <details class="day-block day-free">
+      <summary>Domingo<span class="arrow">›</span></summary>
+      <div class="body">
+        <div class="mini-meal"><div class="txt">Día libre — sin comida ni cena programadas.</div></div>
+      </div>
+    </details>`;
+  el.innerHTML = html;
+}
+
+/* =========================================================
+   RENDER: COMPRA (shopping list)
+   ========================================================= */
+let selectedShopWeek = weekNumberForDate(new Date());
+
+const CATEGORY_RULES = [
+  { cat:"Carnes y aves", test:/pollo|pechuga|ternera|hamburguesa|kebab/i },
+  { cat:"Pescados y mariscos", test:/merluza|pulpo|boquerones|at[uú]n|marisco/i },
+  { cat:"Huevos y lácteos", test:/huevo|queso|mozzarella|yogur/i },
+  { cat:"Fiambres y embutidos", test:/pavo|jam[oó]n/i },
+  { cat:"Panadería y cereales", test:/pan |pan$|pasta|fideos|arroz|tortilla de trigo|piadina/i },
+  { cat:"Frutas y verduras", test:/patata|pepino|tomate(?! frito)|fruta|manzana|pera|naranja|mandarina|mel[oó]n|sand[ií]a|pl[aá]tano/i },
+];
+function categorize(name){
+  for(const r of CATEGORY_RULES){ if(r.test.test(name)) return r.cat; }
+  return "Despensa";
+}
+
+function buildShoppingList(weekNum){
+  // ingredient name -> array of quantity strings
+  const map = {};
+  function add(name, qty){
+    if(!map[name]) map[name] = [];
+    map[name].push(qty);
+  }
+  WEEKS[weekNum].days.forEach(day=>{
+    day.almuerzo.items.forEach(([n,q])=> add(n,q));
+    day.cena.items.forEach(([n,q])=> add(n,q));
+  });
+  // fixed items x6 days
+  add("Pan integral", "6 × 50 g");
+  add("Pavo (fiambre)", "para desayuno, 6 días");
+  add("Aceite de oliva", "uso diario");
+  add("Té o infusión", "uso diario");
+  add("Yogur", "6 unidades");
+  add("Fruta variada (manzana, pera, naranja, mandarina, melón, sandía)", "para media mañana y merienda, toda la semana");
+  add("Plátano", "para antes de entrenar (4×/semana)");
+
+  const groups = {};
+  Object.entries(map).forEach(([name, qtys])=>{
+    const cat = categorize(name);
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push({name, qty: qtys.join(' + ')});
+  });
+  return groups;
+}
+
+function shopItemKey(weekNum, name){ return 'shop:' + weekNum + ':' + name; }
+
+function renderShopWeekPicker(){
+  const wp = document.getElementById('shopWeekPicker');
+  wp.innerHTML = '';
+  [1,2,3,4].forEach(n=>{
+    const b = document.createElement('button');
+    b.textContent = 'Semana ' + n;
+    if(n === selectedShopWeek) b.classList.add('active');
+    b.onclick = ()=>{ selectedShopWeek = n; renderShopWeekPicker(); renderShopList(); };
+    wp.appendChild(b);
+  });
+  document.getElementById('shopSub').textContent = `Ingredientes para la semana del ${WEEKS[selectedShopWeek].range}.`;
+}
+
+const CAT_ORDER = ["Carnes y aves","Pescados y mariscos","Huevos y lácteos","Fiambres y embutidos","Panadería y cereales","Frutas y verduras","Despensa"];
+
+function renderShopList(){
+  const groups = buildShoppingList(selectedShopWeek);
+  const el = document.getElementById('shopList');
+  let html = '';
+  CAT_ORDER.forEach(cat=>{
+    if(!groups[cat]) return;
+    html += `<div class="cat-group"><div class="cat-title">${cat}</div>`;
+    groups[cat].forEach(item=>{
+      const k = shopItemKey(selectedShopWeek, item.name);
+      const checked = !!store[k];
+      html += `
+        <div class="item-row ${checked?'checked':''}" data-key="${k}">
+          <div class="box ${checked?'checked':''}">✓</div>
+          <div class="name">${item.name}</div>
+          <div class="qty">${item.qty}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.item-row').forEach(row=>{
+    row.onclick = ()=>{
+      const k = row.dataset.key;
+      store[k] = !store[k];
+      saveStore();
+      renderShopList();
+    };
+  });
+}
+
+document.getElementById('resetShop').onclick = ()=>{
+  Object.keys(store).forEach(k=>{
+    if(k.startsWith('shop:' + selectedShopWeek + ':')) delete store[k];
+  });
+  saveStore();
+  renderShopList();
+};
+
+/* =========================================================
+   RENDER: ENTRENO
+   ========================================================= */
+function renderTraining(){
+  const main = document.getElementById('mainCircuit');
+  main.innerHTML = TRAINING_MAIN.map(ex=>`
+    <div class="train-block">
+      <div class="t-name">${ex.name}</div>
+      <div class="t-reps">${ex.reps}</div>
+      ${ex.url ? `<a href="${ex.url}" target="_blank" rel="noopener">Ver ejercicio</a>` : ''}
+    </div>`).join('');
+
+  const mob = document.getElementById('mobilityCircuit');
+  mob.innerHTML = TRAINING_MOBILITY.map(ex=>`
+    <div class="train-block">
+      <div class="t-name">${ex.name}</div>
+      <a href="${ex.url}" target="_blank" rel="noopener">Ver ejercicio</a>
+    </div>`).join('');
+}
+
+/* =========================================================
+   TABS
+   ========================================================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  };
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function updateTopDate(){
+  const now = new Date();
+  document.getElementById('topDate').textContent = DOW[now.getDay()] + ' ' + now.getDate() + ' sept.';
+}
+
+updateTopDate();
+renderHoy();
+renderWeekPicker();
+renderWeekList();
+renderShopWeekPicker();
+renderShopList();
+renderTraining();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
